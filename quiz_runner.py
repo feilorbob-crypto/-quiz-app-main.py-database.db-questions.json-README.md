@@ -2,7 +2,7 @@ import json
 import random
 
 QUESTIONS_PATH = "data/questions.json"
-QUESTIONS_COUNT = 30
+QUESTIONS_COUNT = 1
 
 
 def load_questions(path):
