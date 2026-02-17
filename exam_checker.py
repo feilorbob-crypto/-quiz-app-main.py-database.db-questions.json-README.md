@@ -24,9 +24,14 @@ def _build_explanation(
     user_answer: str,
     correct_answer: str,
     is_correct: bool,
-    source: Dict[str, Any] | None,
+    source: Any,
 ) -> str:
-    if source is not None:
+    # Локальная защита: даже при прямом вызове функции с внешним payload
+    # не пытаемся обращаться к .get у не-словаря.
+    if source is not None and not isinstance(source, dict):
+        raise ValueError("Поле 'source' должно быть объектом (dict) или отсутствовать.")
+
+    if isinstance(source, dict):
         doc_number = source.get("document_number", "")
         doc_title = source.get("document_title", "")
         clause = source.get("clause", "")
