@@ -149,18 +149,22 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    questions_path = Path(args.questions)
-    questions = load_questions(questions_path)
-    predefined_answers = parse_answers(args.answers, len(questions))
+    try:
+        questions_path = Path(args.questions)
+        questions = load_questions(questions_path)
+        predefined_answers = parse_answers(args.answers, len(questions))
 
-    summary = run_quiz(questions, predefined_answers)
-    rendered = json.dumps(summary, ensure_ascii=False, indent=2)
+        summary = run_quiz(questions, predefined_answers)
+        rendered = json.dumps(summary, ensure_ascii=False, indent=2)
 
-    if args.output:
-        Path(args.output).write_text(rendered + "\n", encoding="utf-8")
+        if args.output:
+            Path(args.output).write_text(rendered + "\n", encoding="utf-8")
 
-    print("\nИтог:")
-    print(rendered)
+        print("\nИтог:")
+        print(rendered)
+    except (OSError, json.JSONDecodeError, KeyError, ValueError) as exc:
+        print(json.dumps({"error": str(exc)}, ensure_ascii=False, indent=2))
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

@@ -11,17 +11,22 @@ import sys
 from typing import Any, Dict
 
 
+def _validate_source(source: Any) -> Dict[str, Any] | None:
+    if source is None:
+        return None
+    if not isinstance(source, dict):
+        raise ValueError("Поле 'source' должно быть объектом (dict) или отсутствовать.")
+    return source
+
+
 def _build_explanation(
     question: str,
     user_answer: str,
     correct_answer: str,
     is_correct: bool,
-    source: Any,
+    source: Dict[str, Any] | None,
 ) -> str:
-    if source is not None and not isinstance(source, dict):
-        raise ValueError("Поле 'source' должно быть объектом (dict) или отсутствовать.")
-
-    if isinstance(source, dict):
+    if source is not None:
         doc_number = source.get("document_number", "")
         doc_title = source.get("document_title", "")
         clause = source.get("clause", "")
@@ -53,7 +58,7 @@ def evaluate(payload: Dict[str, Any]) -> Dict[str, Any]:
     options = payload["options"]
     correct_index = payload["correct_index"]
     user_index = payload["user_index"]
-    source = payload.get("source")
+    source = _validate_source(payload.get("source"))
 
     if not isinstance(question, str) or not question.strip():
         raise ValueError("Поле 'question' должно быть непустой строкой.")
@@ -69,9 +74,6 @@ def evaluate(payload: Dict[str, Any]) -> Dict[str, Any]:
 
     if not isinstance(user_index, int) or not (0 <= user_index < len(options)):
         raise ValueError("Поле 'user_index' вне диапазона options.")
-
-    if source is not None and not isinstance(source, dict):
-        raise ValueError("Поле 'source' должно быть объектом (dict) или отсутствовать.")
 
     correct_answer = options[correct_index]
     user_answer = options[user_index]
@@ -102,10 +104,7 @@ def main() -> None:
         result = evaluate(data)
         sys.stdout.write(json.dumps(result, ensure_ascii=False, indent=2))
     except (json.JSONDecodeError, KeyError, ValueError) as exc:
-        error_payload = {
-            "error": str(exc),
-        }
-        sys.stdout.write(json.dumps(error_payload, ensure_ascii=False, indent=2))
+        sys.stdout.write(json.dumps({"error": str(exc)}, ensure_ascii=False, indent=2))
         sys.exit(1)
 
 
