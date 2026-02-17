@@ -18,7 +18,7 @@ def _build_explanation(
     is_correct: bool,
     source: Dict[str, Any] | None,
 ) -> str:
-    if source:
+    if source is not None:
         doc_number = source.get("document_number", "")
         doc_title = source.get("document_title", "")
         clause = source.get("clause", "")
@@ -37,9 +37,7 @@ def _build_explanation(
         ).strip()
 
     if is_correct:
-        return (
-            f"Ответ верный: «{correct_answer}» логически соответствует формулировке вопроса «{question}»."
-        )
+        return f"Ответ верный: «{correct_answer}» логически соответствует формулировке вопроса «{question}»."
 
     return (
         f"Правильный вариант: «{correct_answer}». "
@@ -54,14 +52,23 @@ def evaluate(payload: Dict[str, Any]) -> Dict[str, Any]:
     user_index = payload["user_index"]
     source = payload.get("source")
 
+    if not isinstance(question, str) or not question.strip():
+        raise ValueError("Поле 'question' должно быть непустой строкой.")
+
     if not isinstance(options, list) or len(options) == 0:
         raise ValueError("Поле 'options' должно быть непустым списком.")
+
+    if not all(isinstance(opt, str) for opt in options):
+        raise ValueError("Все элементы 'options' должны быть строками.")
 
     if not isinstance(correct_index, int) or not (0 <= correct_index < len(options)):
         raise ValueError("Поле 'correct_index' вне диапазона options.")
 
     if not isinstance(user_index, int) or not (0 <= user_index < len(options)):
         raise ValueError("Поле 'user_index' вне диапазона options.")
+
+    if source is not None and not isinstance(source, dict):
+        raise ValueError("Поле 'source' должно быть объектом (dict) или отсутствовать.")
 
     correct_answer = options[correct_index]
     user_answer = options[user_index]
@@ -80,7 +87,7 @@ def evaluate(payload: Dict[str, Any]) -> Dict[str, Any]:
         ),
     }
 
-    if source:
+    if source is not None:
         result["source"] = source
 
     return result

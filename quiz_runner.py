@@ -69,14 +69,29 @@ def ask_user_index(options: List[str]) -> int:
 def run_quiz(questions: List[Question], predefined_answers: List[int]) -> Dict[str, Any]:
     results: List[Dict[str, Any]] = []
     correct_count = 0
+    skipped_count = 0
 
     for i, item in enumerate(questions, start=1):
         question = item["question"]
         options = item["options"]
+        correct_index = item.get("correct_index", -1)
 
         print(f"\nВопрос {i}: {question}")
         for option_idx, option in enumerate(options, start=1):
             print(f"  {option_idx}. {option}")
+
+        if not isinstance(correct_index, int) or correct_index == -1:
+            skipped_count += 1
+            print("Пропуск: корректный correct_index не задан.")
+            results.append(
+                {
+                    "question": question,
+                    "skipped": True,
+                    "reason": "correct_index не задан (ожидается значение 0..3)",
+                    "correct_index": correct_index,
+                }
+            )
+            continue
 
         if i - 1 < len(predefined_answers):
             user_index = predefined_answers[i - 1]
@@ -91,7 +106,7 @@ def run_quiz(questions: List[Question], predefined_answers: List[int]) -> Dict[s
         payload = {
             "question": question,
             "options": options,
-            "correct_index": item["correct_index"],
+            "correct_index": correct_index,
             "user_index": user_index,
         }
 
@@ -108,6 +123,7 @@ def run_quiz(questions: List[Question], predefined_answers: List[int]) -> Dict[s
     return {
         "total_questions": len(questions),
         "correct_answers": correct_count,
+        "skipped_questions": skipped_count,
         "results": results,
     }
 
