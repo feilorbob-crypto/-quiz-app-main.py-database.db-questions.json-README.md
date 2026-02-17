@@ -94,9 +94,16 @@ def evaluate(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def main() -> None:
-    data = json.load(sys.stdin)
-    result = evaluate(data)
-    sys.stdout.write(json.dumps(result, ensure_ascii=False, indent=2))
+    try:
+        data = json.load(sys.stdin)
+        result = evaluate(data)
+        sys.stdout.write(json.dumps(result, ensure_ascii=False, indent=2))
+    except (json.JSONDecodeError, KeyError, ValueError) as exc:
+        error_payload = {
+            "error": str(exc),
+        }
+        sys.stdout.write(json.dumps(error_payload, ensure_ascii=False, indent=2))
+        sys.exit(1)
 
 
 if __name__ == "__main__":
